@@ -11,64 +11,79 @@ import dk.easv.gui.UTTTGameController;
 import java.sql.Time;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class UngaricheBot implements IBot{
     Random rnd = new Random();
 
-    List<Node> tree = new LinkedList<>();
-
     @Override
     public IMove doMove(IGameState state) {
-        /*
-        if (tree.isEmpty())
-        {
-            tree.add(new Node(state));
-            System.out.println("Root added");
-        }
-        */
-
-        //here because if we mess with the state first, then the move choosing not works... cloning?
-        long time = System.currentTimeMillis();
-        int i = 0;
-        while (System.currentTimeMillis() - time < 999) //how does the time limit affect? if I put it over 1000ms it's still a valid move
-        {
-            simulateRandomGame(new GameState(state));
-            i++;
-        }
-        System.out.println("simulated games: " + i);
-
+        //SET UP POSSIBLE NODES---
         List<IMove> moves = state.getField().getAvailableMoves();
-        IMove nextMove = null;
-        if (moves.size() > 0) {
-            nextMove = moves.get(rnd.nextInt(moves.size())); /* get random move from available moves */
+        List<ExperimentNode> nodes = new ArrayList<>();
+        for (IMove move : moves)
+        {
+            nodes.add(new ExperimentNode(state, move));
         }
 
-        return nextMove;
+        //EXPLORE---
+        long time = System.currentTimeMillis();
+        while (System.currentTimeMillis() - time < 1000) //how does the time limit affect? if I put it over 1000ms it's still a valid move
+        {
+            for (ExperimentNode node : nodes)
+            {
+                if (simulateRandomGame(node))
+                {
+                    node.win++;
+                }
+                node.sim++;
+            }
+        }
+
+        //EXPLOIT---
+        float maxWinRate = 0;
+        ExperimentNode bestNode = null;
+        for (ExperimentNode node : nodes)
+        {
+            if (node.winRate() > maxWinRate)
+            {
+                maxWinRate = node.winRate();
+                bestNode = node;
+            }
+            //System.out.println(node.proposedMove.getX() + " " + node.proposedMove.getX() + " rate:" + node.winRate());
+        }
+
+        if (bestNode != null)
+        {
+            return bestNode.proposedMove;
+        }
+        //just in case, if there is an error: (sometimes best move is null?)
+        return moves.get(rnd.nextInt(0, moves.size()));
     }
 
-    private boolean simulateRandomGame(IGameState state) //simulates a random game from a state, returns true if our bot wins
+    private boolean simulateRandomGame(ExperimentNode experimentNode) //simulates a random game from a state, returns true if our bot wins
     {
         RandomBot randomBot = new RandomBot();
-        GameManager manager = new GameManager(state);
+        GameManager manager = new GameManager(new GameState(experimentNode.state));
+
+        manager.updateGame(experimentNode.proposedMove);
+
         while (manager.getGameOver() == GameManager.GameOverState.Active)
         {
             IMove move = randomBot.doMove(manager.getCurrentState());
-            boolean isValid = verifyMoveLegality(state, move);
+            boolean isValid = verifyMoveLegality(manager.getCurrentState(), move);
             while(!isValid)
             {
                 move = randomBot.doMove(manager.getCurrentState());
-                isValid = verifyMoveLegality(state, move);
+                isValid = verifyMoveLegality(manager.getCurrentState(), move);
             }
             manager.updateGame(randomBot.doMove(manager.getCurrentState()));
         }
         //testing how to get if the bot or the enemy won
         //System.out.println(manager.getGameOver().toString());
-        //System.out.println(manager.getCurrentPlayer() == 1);
+        //System.out.println(manager.getCurrentPlayer() == 1);*/
         return manager.getGameOver() == GameManager.GameOverState.Win && manager.getCurrentPlayer() == 1;
     }
 
@@ -92,16 +107,20 @@ public class UngaricheBot implements IBot{
     }
 }
 
-class Node{
+class ExperimentNode{
     IGameState state;
-    Node parent;
-    List<Node> children = new LinkedList<>();
+    IMove proposedMove;
 
-    float win;
-    float simulation;
-    float visit;
+    float win = 0;
+    float sim = 0;
 
-    Node(IGameState state){
-        state = state;
+    ExperimentNode(IGameState state, IMove proposedMove){
+        this.state = state;
+        this.proposedMove = proposedMove;
+    }
+
+    float winRate()
+    {
+        return win/sim;
     }
 }
