@@ -9,9 +9,11 @@ import java.util.*;
 
 public class UngaricheBot implements IBot{
 
+    Random rnd = new Random();
+
     @Override
     public IMove doMove(IGameState state) {
-        //SET UP POSSIBLE NODES (NEXT MOVES...) /// EXPLORE---
+//SET UP POSSIBLE NODES (NEXT MOVES...) /// EXPLORE---
         List<IMove> moves = state.getField().getAvailableMoves();
         List<ExperimentNode> nodes = new ArrayList<>();
         for (IMove move : moves)
@@ -57,7 +59,6 @@ public class UngaricheBot implements IBot{
 
     private boolean simulateRandomGame(ExperimentNode experimentNode) //simulates a random game from a state, returns true if our bot wins
     {
-        RandomBot randomBot = new RandomBot();
         GameSimulator simulator = createSimulator(experimentNode.state);
         int us = simulator.getCurrentPlayer();
 
@@ -65,7 +66,8 @@ public class UngaricheBot implements IBot{
 
         while (simulator.getGameOver() == GameOverState.Active)
         {
-            simulator.updateGame(randomBot.doMove(simulator.getCurrentState()));
+            List<IMove> moves = simulator.getCurrentState().getField().getAvailableMoves();
+            simulator.updateGame(moves.get(rnd.nextInt(moves.size())));
         }
         //testing how to get if the bot or the enemy won
         //System.out.println(manager.getGameOver().toString());
