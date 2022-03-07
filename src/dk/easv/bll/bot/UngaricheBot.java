@@ -21,7 +21,7 @@ public class UngaricheBot implements IBot{
         }
 
         //SIMULATE
-        int t = 1; //should be 0 but sometimes the first node is starved of simlation...
+        int t = 1; //should be 0 but sometimes the first node is starved of simulation...
 
         long time = System.currentTimeMillis();
         while (System.currentTimeMillis() - time < 1000) //how does the time limit affect? if I put it over 1000ms it's still a valid move
@@ -55,12 +55,7 @@ public class UngaricheBot implements IBot{
             System.out.println("w: " + node.w + " sim: " + node.n + " ucb: " + node.ucb);
         }
         System.out.println("-------------");
-        if (bestNode != null)
-        {
-            return bestNode.proposedMove;
-        }
-        //just in case, if there is an error: (sometimes best move is null?)
-        return moves.get(rnd.nextInt(0, moves.size()));
+        return bestNode.proposedMove;
     }
 
     private boolean simulateRandomGame(ExperimentNode experimentNode) //simulates a random game from a state, returns true if our bot wins
@@ -94,12 +89,7 @@ public class UngaricheBot implements IBot{
             }
             //System.out.println(node.proposedMove.getX() + " " + node.proposedMove.getY() + " rate:" + node.winRate());
         }
-        if (bestNode != null)
-        {
-            return bestNode;
-        }
-        //just in case, if there is an error: (sometimes best move is null?)
-        return nodes.get(rnd.nextInt(0, nodes.size()));
+        return bestNode;
     }
 
     private GameSimulator createSimulator(IGameState state) {
