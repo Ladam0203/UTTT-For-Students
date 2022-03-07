@@ -20,7 +20,7 @@ public class UngaricheBot implements IBot{
         }
 
         //SIMULATE
-        int t = 1; //should be 0 but sometimes the first node is starved of simulation...
+        int t = 1; //should be probs 0, but sometimes the first node is starved of simulation...
 
         long time = System.currentTimeMillis();
         while (System.currentTimeMillis() - time < 1000) //how does the time limit affect? if I put it over 1000ms it's still a valid move
@@ -28,14 +28,12 @@ public class UngaricheBot implements IBot{
             t++;
 
             ExperimentNode node = selectPromisingNode(nodes);
-
             //BACKPROPAGATE
             if (simulateRandomGame(node))
             {
                 node.w++;
             }
             node.n++;
-
             node.ucb = (node.w / node.n) + 1.41 * Math.sqrt ( Math.log (t) / node.n);
         }
 
