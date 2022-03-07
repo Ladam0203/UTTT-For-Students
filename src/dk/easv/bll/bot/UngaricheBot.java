@@ -8,7 +8,6 @@ import dk.easv.bll.move.IMove;
 import java.util.*;
 
 public class UngaricheBot implements IBot{
-    Random rnd = new Random();
 
     @Override
     public IMove doMove(IGameState state) {
