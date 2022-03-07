@@ -48,10 +48,10 @@ public class UngaricheBot implements IBot{
                 maxN = node.n;
                 bestNode = node;
             }
-            System.out.println(node.proposedMove.getX() + " " + node.proposedMove.getY() + " rate:" + node.winRate());
-            System.out.println("w: " + node.w + " sim: " + node.n + " ucb: " + node.ucb);
+            //System.out.println(node.proposedMove.getX() + " " + node.proposedMove.getY() + " rate:" + node.winRate());
+            //System.out.println("w: " + node.w + " sim: " + node.n + " ucb: " + node.ucb);
         }
-        System.out.println("-------------");
+        //System.out.println("-------------");
         return bestNode.proposedMove;
     }
 
