@@ -12,7 +12,7 @@ public class UngaricheBot implements IBot{
 
     @Override
     public IMove doMove(IGameState state) {
-        //SET UP POSSIBLE NODES---
+        //SET UP POSSIBLE NODES (NEXT MOVES...) /// EXPLORE---
         List<IMove> moves = state.getField().getAvailableMoves();
         List<ExperimentNode> nodes = new ArrayList<>();
         for (IMove move : moves)
@@ -20,33 +20,41 @@ public class UngaricheBot implements IBot{
             nodes.add(new ExperimentNode(state, move));
         }
 
-        //EXPLORE---
+        //SIMULATE
+        int t = 1; //should be 0 but sometimes the first node is starved of simlation...
+
         long time = System.currentTimeMillis();
         while (System.currentTimeMillis() - time < 1000) //how does the time limit affect? if I put it over 1000ms it's still a valid move
         {
-            for (ExperimentNode node : nodes)
+            t++;
+
+            ExperimentNode node = selectPromisingNode(nodes);
+
+            //BACKPROPAGATE
+            if (simulateRandomGame(node))
             {
-                if (simulateRandomGame(node))
-                {
-                    node.win++;
-                }
-                node.sim++;
+                node.w++;
             }
+            node.n++;
+
+            node.ucb = (node.w / node.n) + 1.41 * Math.sqrt ( Math.log (t) / node.n);
         }
 
         //EXPLOIT---
-        float maxWinRate = 0;
+
+        double maxN = 0;
         ExperimentNode bestNode = null;
         for (ExperimentNode node : nodes)
         {
-            if (node.winRate() > maxWinRate)
+            if (node.n > maxN)
             {
-                maxWinRate = node.winRate();
+                maxN = node.n;
                 bestNode = node;
             }
-            //System.out.println(node.proposedMove.getX() + " " + node.proposedMove.getY() + " rate:" + node.winRate());
+            System.out.println(node.proposedMove.getX() + " " + node.proposedMove.getY() + " rate:" + node.winRate());
+            System.out.println("w: " + node.w + " sim: " + node.n + " ucb: " + node.ucb);
         }
-
+        System.out.println("-------------");
         if (bestNode != null)
         {
             return bestNode.proposedMove;
@@ -58,21 +66,51 @@ public class UngaricheBot implements IBot{
     private boolean simulateRandomGame(ExperimentNode experimentNode) //simulates a random game from a state, returns true if our bot wins
     {
         RandomBot randomBot = new RandomBot();
-        GameSimulator simulator = new GameSimulator(new GameState(experimentNode.state));
+        GameSimulator simulator = createSimulator(experimentNode.state);
+        int us = simulator.getCurrentPlayer();
 
         simulator.updateGame(experimentNode.proposedMove);
 
         while (simulator.getGameOver() == GameOverState.Active)
         {
-            boolean isValid;
-            do {
-                isValid = simulator.updateGame(randomBot.doMove(simulator.getCurrentState()));
-            } while (!isValid);
+            simulator.updateGame(randomBot.doMove(simulator.getCurrentState()));
         }
         //testing how to get if the bot or the enemy won
         //System.out.println(manager.getGameOver().toString());
         //System.out.println(manager.getCurrentPlayer() == 1);*/
-        return simulator.getGameOver() == GameOverState.Win && simulator.getCurrentPlayer() == 1;
+        return simulator.getGameOver() == GameOverState.Win && simulator.getCurrentPlayer() != us;
+    }
+
+    private ExperimentNode selectPromisingNode(List<ExperimentNode> nodes)
+    {
+        double maxUcb = 0;
+        ExperimentNode bestNode = null;
+        for (ExperimentNode node : nodes)
+        {
+            if (node.ucb > maxUcb)
+            {
+                maxUcb = node.ucb;
+                bestNode = node;
+            }
+            //System.out.println(node.proposedMove.getX() + " " + node.proposedMove.getY() + " rate:" + node.winRate());
+        }
+        if (bestNode != null)
+        {
+            return bestNode;
+        }
+        //just in case, if there is an error: (sometimes best move is null?)
+        return nodes.get(rnd.nextInt(0, nodes.size()));
+    }
+
+    private GameSimulator createSimulator(IGameState state) {
+        GameSimulator simulator = new GameSimulator(new GameState());
+        simulator.setGameOver(GameOverState.Active);
+        simulator.setCurrentPlayer(state.getMoveNumber() % 2);
+        simulator.getCurrentState().setRoundNumber(state.getRoundNumber());
+        simulator.getCurrentState().setMoveNumber(state.getMoveNumber());
+        simulator.getCurrentState().getField().setBoard(state.getField().getBoard());
+        simulator.getCurrentState().getField().setMacroboard(state.getField().getMacroboard());
+        return simulator;
     }
 
     @Override
@@ -85,8 +123,9 @@ class ExperimentNode{
     IGameState state;
     IMove proposedMove;
 
-    float win = 0;
-    float sim = 0;
+    float w = 0;
+    float n = 0;
+    double ucb = Double.MAX_VALUE;
 
     ExperimentNode(IGameState state, IMove proposedMove){
         this.state = state;
@@ -95,7 +134,7 @@ class ExperimentNode{
 
     float winRate()
     {
-        return win/sim;
+        return w/n;
     }
 }
 
@@ -230,7 +269,9 @@ class GameSimulator {
 
             //Check macro win
             if (isWin(macroBoard, new Move(macroX, macroY), "" + currentPlayer))
+            {
                 gameOver = GameOverState.Win;
+            }
             else if (isTie(macroBoard, new Move(macroX, macroY)))
                 gameOver = GameOverState.Tie;
         }
