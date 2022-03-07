@@ -13,7 +13,7 @@ public class UngaricheBot implements IBot{
 
     @Override
     public IMove doMove(IGameState state) {
-//SET UP POSSIBLE NODES (NEXT MOVES...) /// EXPLORE---
+        //SET UP POSSIBLE NODES (NEXT MOVES...) /// EXPLORE---
         List<IMove> moves = state.getField().getAvailableMoves();
         List<ExperimentNode> nodes = new ArrayList<>();
         for (IMove move : moves)
