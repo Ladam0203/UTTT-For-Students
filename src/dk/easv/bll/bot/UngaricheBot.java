@@ -120,11 +120,6 @@ class ExperimentNode{
         this.state = state;
         this.proposedMove = proposedMove;
     }
-
-    float winRate()
-    {
-        return w/n;
-    }
 }
 
 
@@ -139,8 +134,8 @@ enum GameOverState {
 }
 
 class Move implements IMove {
-    int x = 0;
-    int y = 0;
+    int x;
+    int y;
 
     public Move(int x, int y) {
         this.x = x;
@@ -166,7 +161,7 @@ class Move implements IMove {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        ExampleSneakyBot.Move move = (ExampleSneakyBot.Move) o;
+        Move move = (Move) o;
         return x == move.x && y == move.y;
     }
 
