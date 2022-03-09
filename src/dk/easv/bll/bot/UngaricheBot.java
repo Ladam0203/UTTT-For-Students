@@ -10,15 +10,18 @@ import java.util.*;
 public class UngaricheBot implements IBot{
 
     Random rnd = new Random();
+    IGameState state;
 
     @Override
     public IMove doMove(IGameState state) {
+        this.state = state;
+
         //SET UP POSSIBLE NODES (NEXT MOVES...) /// EXPLORE---
         List<IMove> moves = state.getField().getAvailableMoves();
         List<ExperimentNode> nodes = new ArrayList<>();
         for (IMove move : moves)
         {
-            nodes.add(new ExperimentNode(state, move));
+            nodes.add(new ExperimentNode(move));
         }
 
         //SIMULATE
@@ -59,7 +62,7 @@ public class UngaricheBot implements IBot{
 
     private boolean simulateRandomGame(ExperimentNode experimentNode) //simulates a random game from a state, returns true if our bot wins
     {
-        GameSimulator simulator = createSimulator(experimentNode.state);
+        GameSimulator simulator = createSimulator(state);
         int us = simulator.getCurrentPlayer();
 
         simulator.updateGame(experimentNode.proposedMove);
@@ -109,15 +112,13 @@ public class UngaricheBot implements IBot{
 }
 
 class ExperimentNode{
-    IGameState state;
     IMove proposedMove;
 
     float w = 0;
     float n = 0;
     double ucb = Double.MAX_VALUE;
 
-    ExperimentNode(IGameState state, IMove proposedMove){
-        this.state = state;
+    ExperimentNode(IMove proposedMove){
         this.proposedMove = proposedMove;
     }
 }
