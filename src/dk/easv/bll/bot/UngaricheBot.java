@@ -30,16 +30,14 @@ public class UngaricheBot implements IBot{
         long time = System.currentTimeMillis();
         while (System.currentTimeMillis() - time < 1000) //how does the time limit affect? if I put it over 1000ms it's still a valid move
         {
-            t++;
 
             ExperimentNode node = selectPromisingNode(nodes);
             //BACKPROPAGATE
-            if (simulateRandomGame(node))
-            {
-                node.w++;
-            }
+            node.w += simulateRandomGame(node);
             node.n++;
-            node.ucb = (node.w / node.n) + 1.41 * Math.sqrt ( Math.log (t) / node.n);
+            node.ucb = node.w + 1.41 * Math.sqrt ( Math.log (t) / node.n);
+
+            t++;
         }
 
         //EXPLOIT---
@@ -54,28 +52,97 @@ public class UngaricheBot implements IBot{
                 bestNode = node;
             }
             //System.out.println(node.proposedMove.getX() + " " + node.proposedMove.getY() + " rate:" + node.winRate());
-            //System.out.println("w: " + node.w + " sim: " + node.n + " ucb: " + node.ucb);
+            System.out.println("w: " + node.w + " sim: " + node.n + " ucb: " + node.ucb);
         }
         //System.out.println("-------------");
         return bestNode.proposedMove;
     }
 
-    private boolean simulateRandomGame(ExperimentNode experimentNode) //simulates a random game from a state, returns true if our bot wins
+    private int simulateRandomGame(ExperimentNode experimentNode) //simulates a random game from a state, returns true if our bot wins
     {
         GameSimulator simulator = createSimulator(state);
-        int us = simulator.getCurrentPlayer();
+        int botNo = simulator.getCurrentPlayer();
 
         simulator.updateGame(experimentNode.proposedMove);
 
-        while (simulator.getGameOver() == GameOverState.Active)
+        int depth = 7;
+        int simMoves = 0;
+        while (simulator.getGameOver() == GameOverState.Active && simMoves < depth)
         {
             List<IMove> moves = simulator.getCurrentState().getField().getAvailableMoves();
             simulator.updateGame(moves.get(rnd.nextInt(moves.size())));
+
+            simMoves++;
         }
         //testing how to get if the bot or the enemy won
         //System.out.println(manager.getGameOver().toString());
         //System.out.println(manager.getCurrentPlayer() == 1);*/
-        return simulator.getGameOver() == GameOverState.Win && simulator.getCurrentPlayer() != us;
+        return evaluateSimulation(simulator, botNo);
+    }
+
+    private int evaluateSimulation(GameSimulator simulator, int botNo)
+    {
+        String[][] b = simulator.getCurrentState().getField().getBoard();
+        String botStr = String.valueOf(botNo);
+        String otherStr = String.valueOf(botNo == 1 ? 0 : 1);
+        int eval = 0;
+
+        if (simulator.getGameOver() == GameOverState.Win && simulator.getCurrentPlayer() != botNo)
+        {
+            return 10000;
+        }
+        else if (simulator.getGameOver() == GameOverState.Win && simulator.getCurrentPlayer() == botNo)
+        {
+            return -10000;
+        }
+        else
+        {
+            for (int bigRow = 0; bigRow < 9 ; bigRow+=3)
+            {
+                for (int bigCol = 0; bigCol < 9; bigCol+=3) {
+                    // Checking for Rows for X or O victory.
+                    for (int row = bigRow; row<bigRow+3; row++)
+                    {
+                        if (Objects.equals(b[row][bigCol], b[row][bigCol+1]) && Objects.equals(b[row][bigCol+1], b[row][bigCol+2]))
+                        {
+                            if (b[row][0].equals(botStr))
+                                eval += 1;
+                            else if (b[row][0].equals(otherStr))
+                                eval -= 1;
+                        }
+                    }
+
+                    // Checking for Columns for X or O victory.
+                    for (int col = bigCol; col<bigCol+3; col++)
+                    {
+                        if (Objects.equals(b[bigRow][col], b[bigRow+1][col]) && Objects.equals(b[bigRow+1][col], b[bigRow+2][col]))
+                        {
+                            if (b[0][col].equals(botStr))
+                                eval += 1;
+                            else if (b[0][col].equals(otherStr))
+                                eval -= 1;
+                        }
+                    }
+
+                    // Checking for Diagonals for X or O victory.
+                    if (Objects.equals(b[bigRow][bigCol], b[bigRow+1][bigCol+1]) && Objects.equals(b[bigRow+1][bigCol+1], b[bigRow+2][bigCol+2]))
+                    {
+                        if (b[0][0].equals(botStr))
+                            eval += 1;
+                        else if (b[0][0].equals(otherStr))
+                            eval -= 1;
+                    }
+                    if (Objects.equals(b[bigRow][bigCol + 2], b[bigRow+1][bigCol+1]) && Objects.equals(b[bigRow+1][bigCol+1], b[bigRow+2][bigCol]))
+                    {
+                        if (b[0][2].equals(botStr))
+                            eval += 1;
+                        else if (b[0][2].equals(otherStr))
+                            eval -= 1;
+                    }
+                }
+            }
+        }
+        return eval;
     }
 
     private ExperimentNode selectPromisingNode(List<ExperimentNode> nodes)
