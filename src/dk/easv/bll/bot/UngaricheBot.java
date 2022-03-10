@@ -11,10 +11,12 @@ public class UngaricheBot implements IBot{
 
     Random rnd = new Random();
     IGameState state;
+    int botNo;
 
     @Override
     public IMove doMove(IGameState state) {
         this.state = state;
+        botNo = state.getMoveNumber()%2;
 
         //SET UP POSSIBLE NODES (NEXT MOVES...) /// EXPLORE---
         List<IMove> moves = state.getField().getAvailableMoves();
@@ -28,7 +30,7 @@ public class UngaricheBot implements IBot{
         int t = 1; //should be probs 0, but sometimes the first node is starved of simulation...
 
         long time = System.currentTimeMillis();
-        while (System.currentTimeMillis() - time < 1000) //how does the time limit affect? if I put it over 1000ms it's still a valid move
+        while (System.currentTimeMillis() - time < 100) //how does the time limit affect? if I put it over 1000ms it's still a valid move
         {
             t++;
 
@@ -60,11 +62,10 @@ public class UngaricheBot implements IBot{
     private int simulateRandomGame(ExperimentNode experimentNode) //simulates a random game from a state, returns true if our bot wins
     {
         GameSimulator simulator = createSimulator(state);
-        int botNo = simulator.getCurrentPlayer();
 
         simulator.updateGame(experimentNode.proposedMove);
 
-        int depth = 7;
+        int depth = 3;
         int simMoves = 0;
         while (simulator.getGameOver() == GameOverState.Active && simMoves < depth)
         {
@@ -81,9 +82,12 @@ public class UngaricheBot implements IBot{
 
     private int evaluateSimulation(GameSimulator simulator, int botNo)
     {
-        String[][] b = simulator.getCurrentState().getField().getBoard();
         String botStr = String.valueOf(botNo);
         String otherStr = String.valueOf(botNo == 1 ? 0 : 1);
+
+        String[][] b = simulator.getCurrentState().getField().getBoard(); //full board
+        
+        String[][] bigB = new String[3][3]; //big board, but 3x3
         int eval = 0;
 
         if (simulator.getGameOver() == GameOverState.Win && simulator.getCurrentPlayer() != botNo)
@@ -110,11 +114,19 @@ public class UngaricheBot implements IBot{
                                 {
                                     eval+=10;
                                 }
+                                if (isCornerBoard(bigRow, bigCol))
+                                {
+                                    eval += 3;
+                                }
                             else if (b[row][bigCol].equals(otherStr))
                                 eval -= 5;
                                 if (isMiddleBoard(bigRow, bigCol))
                                 {
                                     eval-=10;
+                                }
+                                if (isCornerBoard(bigRow, bigCol))
+                                {
+                                    eval -= 3;
                                 }
                         }
                     }
@@ -130,11 +142,19 @@ public class UngaricheBot implements IBot{
                                 {
                                     eval+=10;
                                 }
+                                if (isCornerBoard(bigRow, bigCol))
+                                {
+                                    eval += 3;
+                                }
                             else if (b[bigRow][col].equals(otherStr))
                                 eval -= 5;
                                 if (isMiddleBoard(bigRow, bigCol))
                                 {
                                     eval-=10;
+                                }
+                                if (isCornerBoard(bigRow, bigCol))
+                                {
+                                    eval -= 3;
                                 }
                         }
                     }
@@ -148,13 +168,21 @@ public class UngaricheBot implements IBot{
                             {
                                 eval+=10;
                             }
+                            if (isCornerBoard(bigRow, bigCol))
+                            {
+                                eval += 3;
+                            }
                         else if (b[bigRow][bigCol].equals(otherStr))
                             eval -= 5;
                             if (isMiddleBoard(bigRow, bigCol))
                             {
                                 eval-=10;
                             }
-                    }
+                            if (isCornerBoard(bigRow, bigCol))
+                            {
+                                eval -= 3;
+                            }
+                        }
                     if (Objects.equals(b[bigRow][bigCol + 2], b[bigRow+1][bigCol+1]) && Objects.equals(b[bigRow+1][bigCol+1], b[bigRow+2][bigCol]))
                     {
                         if (b[bigRow][bigCol+2].equals(botStr))
@@ -163,11 +191,19 @@ public class UngaricheBot implements IBot{
                             {
                                 eval+=10;
                             }
+                            if (isCornerBoard(bigRow, bigCol))
+                            {
+                                eval += 3;
+                            }
                         else if (b[bigRow][bigCol+2].equals(otherStr))
                             eval -= 5;
                             if (isMiddleBoard(bigRow, bigCol))
                             {
                                 eval-=10;
+                            }
+                            if (isCornerBoard(bigRow, bigCol))
+                            {
+                                eval -= 3;
                             }
                     }
                 }
@@ -181,9 +217,18 @@ public class UngaricheBot implements IBot{
         return bigRow == 3 && bigCol == 3;
     }
 
+    private boolean isCornerBoard(int bigRow, int bigCol)
+    {
+        return (bigRow == 0 && bigCol == 0) ||
+                (bigRow == 6 && bigCol == 0) ||
+                (bigRow == 0 && bigCol == 6) ||
+                (bigRow == 6 && bigCol == 6);
+
+    }
+
     private ExperimentNode selectPromisingNode(List<ExperimentNode> nodes)
     {
-        double maxUcb = 0;
+        double maxUcb = -Double.MAX_VALUE;
         ExperimentNode bestNode = null;
         for (ExperimentNode node : nodes)
         {
@@ -192,8 +237,11 @@ public class UngaricheBot implements IBot{
                 maxUcb = node.ucb;
                 bestNode = node;
             }
+            //System.out.println(node.ucb);
+            //System.out.println(node.ucb > maxUcb);
             //System.out.println(node.proposedMove.getX() + " " + node.proposedMove.getY() + " rate:" + node.winRate());
         }
+        //System.out.println("---");
         return bestNode;
     }
 
@@ -217,8 +265,8 @@ public class UngaricheBot implements IBot{
 class ExperimentNode{
     IMove proposedMove;
 
-    float w = 0;
-    float n = 0;
+    double w = 0;
+    double n = 0;
     double ucb = Double.MAX_VALUE;
 
     ExperimentNode(IMove proposedMove){
