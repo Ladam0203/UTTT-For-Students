@@ -105,16 +105,16 @@ public class UngaricheBot implements IBot{
                         if (Objects.equals(b[row][bigCol], b[row][bigCol+1]) && Objects.equals(b[row][bigCol+1], b[row][bigCol+2]))
                         {
                             if (b[row][bigCol].equals(botStr))
-                                eval += 1;
-                                if (bigCol == 3 && bigRow == 3)
+                                eval += 5;
+                                if (isMiddleBoard(bigRow, bigCol))
                                 {
-                                    eval+=5;
+                                    eval+=10;
                                 }
                             else if (b[row][bigCol].equals(otherStr))
-                                eval -= 1;
-                                if (bigCol == 3 && bigRow == 3)
+                                eval -= 5;
+                                if (isMiddleBoard(bigRow, bigCol))
                                 {
-                                    eval-=5;
+                                    eval-=10;
                                 }
                         }
                     }
@@ -125,16 +125,16 @@ public class UngaricheBot implements IBot{
                         if (Objects.equals(b[bigRow][col], b[bigRow+1][col]) && Objects.equals(b[bigRow+1][col], b[bigRow+2][col]))
                         {
                             if (b[bigRow][col].equals(botStr))
-                                eval += 1;
-                                if (bigCol == 3 && bigRow == 3)
+                                eval += 5;
+                                if (isMiddleBoard(bigRow, bigCol))
                                 {
-                                    eval+=5;
+                                    eval+=10;
                                 }
                             else if (b[bigRow][col].equals(otherStr))
-                                eval -= 1;
-                                if (bigCol == 3 && bigRow == 3)
+                                eval -= 5;
+                                if (isMiddleBoard(bigRow, bigCol))
                                 {
-                                    eval-=5;
+                                    eval-=10;
                                 }
                         }
                     }
@@ -143,37 +143,42 @@ public class UngaricheBot implements IBot{
                     if (Objects.equals(b[bigRow][bigCol], b[bigRow+1][bigCol+1]) && Objects.equals(b[bigRow+1][bigCol+1], b[bigRow+2][bigCol+2]))
                     {
                         if (b[bigRow][bigCol].equals(botStr))
-                            eval += 1;
-                            if (bigCol == 3 && bigRow == 3)
+                            eval += 5;
+                            if (isMiddleBoard(bigRow, bigCol))
                             {
-                                eval+=5;
+                                eval+=10;
                             }
                         else if (b[bigRow][bigCol].equals(otherStr))
-                            eval -= 1;
-                            if (bigCol == 3 && bigRow == 3)
+                            eval -= 5;
+                            if (isMiddleBoard(bigRow, bigCol))
                             {
-                                eval-=5;
+                                eval-=10;
                             }
                     }
                     if (Objects.equals(b[bigRow][bigCol + 2], b[bigRow+1][bigCol+1]) && Objects.equals(b[bigRow+1][bigCol+1], b[bigRow+2][bigCol]))
                     {
                         if (b[bigRow][bigCol+2].equals(botStr))
-                            eval += 1;
-                            if (bigCol == 3 && bigRow == 3)
+                            eval += 5;
+                            if (isMiddleBoard(bigRow, bigCol))
                             {
-                                eval+=5;
+                                eval+=10;
                             }
                         else if (b[bigRow][bigCol+2].equals(otherStr))
-                            eval -= 1;
-                            if (bigCol == 3 && bigRow == 3)
+                            eval -= 5;
+                            if (isMiddleBoard(bigRow, bigCol))
                             {
-                                eval-=5;
+                                eval-=10;
                             }
                     }
                 }
             }
         }
         return eval;
+    }
+
+    private boolean isMiddleBoard(int bigRow, int bigCol)
+    {
+        return bigRow == 3 && bigCol == 3;
     }
 
     private ExperimentNode selectPromisingNode(List<ExperimentNode> nodes)
