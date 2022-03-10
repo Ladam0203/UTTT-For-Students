@@ -106,8 +106,16 @@ public class UngaricheBot implements IBot{
                         {
                             if (b[row][bigCol].equals(botStr))
                                 eval += 1;
+                                if (bigCol == 3 && bigRow == 3)
+                                {
+                                    eval+=5;
+                                }
                             else if (b[row][bigCol].equals(otherStr))
                                 eval -= 1;
+                                if (bigCol == 3 && bigRow == 3)
+                                {
+                                    eval-=5;
+                                }
                         }
                     }
 
@@ -118,8 +126,16 @@ public class UngaricheBot implements IBot{
                         {
                             if (b[bigRow][col].equals(botStr))
                                 eval += 1;
+                                if (bigCol == 3 && bigRow == 3)
+                                {
+                                    eval+=5;
+                                }
                             else if (b[bigRow][col].equals(otherStr))
                                 eval -= 1;
+                                if (bigCol == 3 && bigRow == 3)
+                                {
+                                    eval-=5;
+                                }
                         }
                     }
 
@@ -128,15 +144,31 @@ public class UngaricheBot implements IBot{
                     {
                         if (b[bigRow][bigCol].equals(botStr))
                             eval += 1;
+                            if (bigCol == 3 && bigRow == 3)
+                            {
+                                eval+=5;
+                            }
                         else if (b[bigRow][bigCol].equals(otherStr))
                             eval -= 1;
+                            if (bigCol == 3 && bigRow == 3)
+                            {
+                                eval-=5;
+                            }
                     }
                     if (Objects.equals(b[bigRow][bigCol + 2], b[bigRow+1][bigCol+1]) && Objects.equals(b[bigRow+1][bigCol+1], b[bigRow+2][bigCol]))
                     {
                         if (b[bigRow][bigCol+2].equals(botStr))
                             eval += 1;
+                            if (bigCol == 3 && bigRow == 3)
+                            {
+                                eval+=5;
+                            }
                         else if (b[bigRow][bigCol+2].equals(otherStr))
                             eval -= 1;
+                            if (bigCol == 3 && bigRow == 3)
+                            {
+                                eval-=5;
+                            }
                     }
                 }
             }
