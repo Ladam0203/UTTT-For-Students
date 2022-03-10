@@ -30,14 +30,13 @@ public class UngaricheBot implements IBot{
         long time = System.currentTimeMillis();
         while (System.currentTimeMillis() - time < 1000) //how does the time limit affect? if I put it over 1000ms it's still a valid move
         {
+            t++;
 
             ExperimentNode node = selectPromisingNode(nodes);
             //BACKPROPAGATE
             node.w += simulateRandomGame(node);
             node.n++;
-            node.ucb = node.w + 1.41 * Math.sqrt ( Math.log (t) / node.n);
-
-            t++;
+            node.ucb = (node.w) + 2.82 * Math.sqrt ( 2*Math.log (t) / node.n); //bigger exploration
         }
 
         //EXPLOIT---
@@ -105,9 +104,9 @@ public class UngaricheBot implements IBot{
                     {
                         if (Objects.equals(b[row][bigCol], b[row][bigCol+1]) && Objects.equals(b[row][bigCol+1], b[row][bigCol+2]))
                         {
-                            if (b[row][0].equals(botStr))
+                            if (b[row][bigCol].equals(botStr))
                                 eval += 1;
-                            else if (b[row][0].equals(otherStr))
+                            else if (b[row][bigCol].equals(otherStr))
                                 eval -= 1;
                         }
                     }
@@ -117,9 +116,9 @@ public class UngaricheBot implements IBot{
                     {
                         if (Objects.equals(b[bigRow][col], b[bigRow+1][col]) && Objects.equals(b[bigRow+1][col], b[bigRow+2][col]))
                         {
-                            if (b[0][col].equals(botStr))
+                            if (b[bigRow][col].equals(botStr))
                                 eval += 1;
-                            else if (b[0][col].equals(otherStr))
+                            else if (b[bigRow][col].equals(otherStr))
                                 eval -= 1;
                         }
                     }
@@ -127,16 +126,16 @@ public class UngaricheBot implements IBot{
                     // Checking for Diagonals for X or O victory.
                     if (Objects.equals(b[bigRow][bigCol], b[bigRow+1][bigCol+1]) && Objects.equals(b[bigRow+1][bigCol+1], b[bigRow+2][bigCol+2]))
                     {
-                        if (b[0][0].equals(botStr))
+                        if (b[bigRow][bigCol].equals(botStr))
                             eval += 1;
-                        else if (b[0][0].equals(otherStr))
+                        else if (b[bigRow][bigCol].equals(otherStr))
                             eval -= 1;
                     }
                     if (Objects.equals(b[bigRow][bigCol + 2], b[bigRow+1][bigCol+1]) && Objects.equals(b[bigRow+1][bigCol+1], b[bigRow+2][bigCol]))
                     {
-                        if (b[0][2].equals(botStr))
+                        if (b[bigRow][bigCol+2].equals(botStr))
                             eval += 1;
-                        else if (b[0][2].equals(otherStr))
+                        else if (b[bigRow][bigCol+2].equals(otherStr))
                             eval -= 1;
                     }
                 }
