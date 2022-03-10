@@ -38,7 +38,7 @@ public class UngaricheBot implements IBot{
             //BACKPROPAGATE
             node.w += simulateRandomGame(node);
             node.n++;
-            node.ucb = (node.w) + 2.82 * Math.sqrt ( 2*Math.log (t) / node.n); //bigger exploration
+            node.ucb = (node.w/node.n) + 1.41 * Math.sqrt (Math.log (t) / node.n);
         }
 
         //EXPLOIT---
@@ -86,7 +86,7 @@ public class UngaricheBot implements IBot{
         String otherStr = String.valueOf(botNo == 1 ? 0 : 1);
 
         String[][] b = simulator.getCurrentState().getField().getBoard(); //full board
-        
+
         String[][] bigB = new String[3][3]; //big board, but 3x3
         int eval = 0;
 
