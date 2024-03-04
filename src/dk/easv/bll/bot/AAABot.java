@@ -1,33 +1,22 @@
 package dk.easv.bll.bot;
 
-import com.google.gson.internal.bind.util.ISO8601Utils;
 import dk.easv.bll.game.GameManager;
 import dk.easv.bll.game.GameState;
 import dk.easv.bll.game.IGameState;
 import dk.easv.bll.move.IMove;
 
+import java.util.Random;
+
 public class AAABot implements IBot {
-    private int thisPlayer;
+    Random r = new Random();
+
     @Override
     public IMove doMove(IGameState state) {
-        thisPlayer = state.getMoveNumber() % 2;
-
         IMove[] moves = state.getField().getAvailableMoves().toArray(new IMove[0]);
-
-        RandomBot rnd1 = new RandomBot();
-        RandomBot rnd2 = new RandomBot();
-
-        GameManager[] games = new GameManager[moves.length];
-        IGameState[] nextStates = new IGameState[moves.length];
-        for (int i = 0; i < moves.length; i++) {
-            games[i] = new GameManager(new GameState(state));
-            games[i].updateGame(moves[i]);
-            nextStates[i] = games[i].getCurrentState();
-        }
 
         double[] w = new double[moves.length]; //no of simulations that resulted in a win for i
         double[] s = new double[moves.length]; //no of simulations of i (visits)
-        double c = Math.sqrt(2); //exploration parameter
+        double c = 1.414; //exploration parameter
         double t = 0; //total number of simulations
         double[] ucb = new double[moves.length]; //ucb value of i
         for (int i = 0; i < moves.length; i++) {
@@ -41,7 +30,7 @@ public class AAABot implements IBot {
             int i = 0;
             double ucbMax = -1;
             for (int j = 0; j < moves.length; j++) {
-                if (s[j] < 2) {
+                if (s[j] < 2) { // Sim each node at least twice
                     i = j;
                     break;
                 }
@@ -52,21 +41,28 @@ public class AAABot implements IBot {
             }
 
             // Simulate
-            games[i] = new GameManager(new GameState(nextStates[i]), rnd1, rnd2);
-            while (games[i].getGameOver() == GameManager.GameOverState.Active) {
-                games[i].updateGame();
+            GameManager simulator = new GameManager(new GameState(state));
+            simulator.updateGame(moves[i]);
+            while (simulator.getGameOver() == GameManager.GameOverState.Active) {
+                IMove[] availableMoves = simulator.getCurrentState().getField().getAvailableMoves().toArray(new IMove[0]);
+                simulator.updateGame(availableMoves[r.nextInt(availableMoves.length)]);
             }
             s[i]++;
             t++;
 
-            if (games[i].getGameOver() == GameManager.GameOverState.Win) {
-                if (games[i].getCurrentPlayer() != thisPlayer) { // We won
-                    w[i] += 1;
-                }
+            if (simulator.getGameOver() == GameManager.GameOverState.Win
+                    && simulator.getCurrentPlayer() == 1) {
+                w[i] += 1;
+            } else if (simulator.getGameOver() == GameManager.GameOverState.Tie) {
+                w[i] += 0.01;
             }
 
             // Backpropagate
-            ucb[i] = (w[i] / s[i]) + (c * Math.sqrt(Math.log(t) / s[i]));
+            double underSqrt = Math.log(t) / s[i];
+            double sqrt = Math.sqrt(underSqrt);
+            double cSqrt = c * sqrt;
+            double ws = w[i] / s[i];
+            ucb[i] = ws + cSqrt;
         }
 
         //Find the best move (by highest no of simulations)
